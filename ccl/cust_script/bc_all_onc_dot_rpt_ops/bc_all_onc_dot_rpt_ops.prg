@@ -66,6 +66,21 @@ record t_rec
 	 2 existing_doc_pos = i2 ;002
 	 2 fin = vc
 	 2 name = vc
+	 2 parser_command = vc
+)
+ 
+record 3050002REQUEST (
+  1 program_name = vc
+  1 query_command = vc
+  1 output_device = vc
+  1 Is_printer = c1
+  1 Is_Odbc = c1
+  1 IsBlob = c1
+  1 params = vc
+  1 qual [*]
+    2 parameter = vc
+    2 data_type = c1
+  1 blob_in = gvc
 )
  
 declare i = i4 with noconstant(0), protect
@@ -403,15 +418,20 @@ for (i = 1 to t_rec->new_doc_cnt)
 			endfor
 		endif
  
- 		call writeLog(build2("executing report"))
-		execute bc_all_onc_dot_orders_rpt ^NL:^,^-|1|D^,^+|5|D^, t_rec->new_doc_qual[i].encntr_id
+ 		call writeLog(build2("executing report with tdbexecute"))
+ 		set stat = initrec(3050002request)
+ 		free record 3050002reply
+ 
+ 		set 3050002request->program_name = "bc_all_onc_dot_orders_rpt"
+ 		set 3050002request->params = build2("^NL:^,^-|1|D^,^+|5|D^,",t_rec->new_doc_qual[i].encntr_id)
+ 
+		set stat = tdbexecute(5000,3202004,3050002,"REC",3050002request,"REC",3050002reply)
  
 	endif
 endfor
 call writeLog(build2("* END   Calling Document Creation *****************************"))
 call writeLog(build2("***************************************************************"))
  
-/*
 call writeLog(build2("***************************************************************"))
 call writeLog(build2("* START Gathering Names ***************************************"))
 call writeLog(build2("->existing documents"))
@@ -486,7 +506,6 @@ call writeLog(build2("* START Section ******************************************
  
 call writeLog(build2("* END   Section ***********************************************"))
 call writeLog(build2("***************************************************************"))
-*/
  
 set reply->status_data->status = "S"
  
