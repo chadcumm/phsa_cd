@@ -4,8 +4,8 @@
   Author:             Chad Cummings
   Date Written:       03/01/2019
   Solution:           
-  Source file name:   eks_bc_dot_rpt_560201.prg
-  Object name:        eks_bc_dot_rpt_560201
+  Source file name:   bc_common_log.prg
+  Object name:        bc_common_log
   Request #:
 
   Program purpose:
@@ -116,6 +116,15 @@ endif
 call writeLog(build2("person_id: ",t_rec->person_id))
 call writeLog(build2("order_id: ",t_rec->order_id))
 
+select into "nl:"
+from
+	person p
+plan p
+	where p.person_id = t_rec->person_id
+detail
+	call writeLog(build2("patient name: ",trim(p.name_full_formatted)))
+with nocounter
+ 
 if (t_rec->encntr_id = 0.0)
 select into "nl:"
 	from
@@ -316,8 +325,40 @@ if ((t_rec->dot_order_action_found_ind = 1) and (t_rec->encntr_id > 0.0))
     call writeLog(build2("t_rec->rpt_beg_date: ", t_rec->rpt_beg_date))
     call writeLog(build2("t_rec->rpt_end_date: ", t_rec->rpt_end_date))
     call writeLog(build2("running report program"))
+	;execute test_all_onc_dot_orders_drv "NL:",0,t_rec->encntr_id,t_rec->rpt_beg_date,t_rec->rpt_end_date,""
+	;execute cmc_all_onc_dot_orders_drv "NL:",0,t_rec->encntr_id,t_rec->rpt_beg_date,t_rec->rpt_end_date,""
+    ;execute bc_all_onc_dot_orders_drv "NL:",0,t_rec->qual_encntr_ids[1]->encntr_id,t_rec->rpt_beg_date,t_rec->rpt_end_date,""
 	
-	execute bc_all_onc_dot_orders_rpt ^NL:^,^-|1|D^,^+|5|D^, t_rec->encntr_id
+ /*
+    execute test_all_onc_dot_orders_drv ^NOFORMS^
+				,0
+				,t_rec->encntr_id
+				,t_rec->rpt_beg_date
+				,t_rec->rpt_end_date
+				,"1"
+ 
+ */
+	;execute cmc_test ^NL:^,^-|1|D^,^+|5|D^, t_rec->encntr_id
+	
+	execute bc_all_all_date_routines 
+	
+	free record request2900403 
+	record request2900403
+	(
+	    1 fromDate = dq8
+		1 toDate = dq8
+		1 encntr_id = f8
+	
+	) 
+
+	set request2900403->encntr_id = t_rec->encntr_id
+	set request2900403->fromDate = sCST_DATE_RANGE_TO(^-|1|D^) 
+	set request2900403->toDate = sCST_DATE_RANGE_FROM(^+|5|D^) 
+
+	call writeLog(build2(cnvtrectojson(request2900403)))
+	set stat = tdbexecute(4800,4801,2900403,"REC",request2900403,"REC",reply2900403) 
+	call writeLog(build2(cnvtrectojson(request2900403)))
+	
 	set retval = 100
 endif
 
@@ -333,3 +374,4 @@ call echorecord(program_log)
 
 end 
 go
+
