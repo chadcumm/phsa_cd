@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:dd="DynamicDocumentation">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=10" />
+    <style>
+        table.dot {
+            width: 100%;
+            border-collapse: collapse;
+        }
+ 
+        td {
+            border: 1px solid #000000;
+        }
+    </style>
+</head>
+<body>
+<h3>This report is NOT to be used as the source of truth to make medication administration decisions.<br/>
+Please use other pertinent sources (e.g. MAR, 724).</h3>
+<p>Report Content Created: ||run_date||</p>
+<p>Report Includes Orders From: ||from_date|| to ||end_date||</p>
+<p>CST Cerner Document Type Alias: * 9429 *</p>
+<hr />
+<div style="text-align: center; font-weight: bold">Do not write on this report.</div>
+<div style="text-align: center;">Scan/Index to Downtime DOT Orders Report in CST Cerner after Downtime.</div>
+<hr />
+ 
+<h3>
+    <span style="margin-right: 2rem;">DOB: ||dob||</span>
+    <span style="margin-right: 2rem;">Age: ||age||</span>
+    <span style="margin-right: 2rem;">PHN: ||phn||</span>
+    <span>Dual Modality: ||dual_modality||</span>
+</h3>
+ 
+<div style="font-family: tahoma,arial; font-size: 10pt;">
+||orders||
+</div>
+ 
+<!-- DYNDOC piece needed to avoid error message -->
+<div style="font-family: tahoma,arial; font-size: 11pt;">
+    <div class="ddsection">
+        <div class="ddfreetext ddrefreshable" dd:btnfloatingstyle="top-right"></div>
+    </div>
+</div>
+ 
+</body>
+</html>
+ 
