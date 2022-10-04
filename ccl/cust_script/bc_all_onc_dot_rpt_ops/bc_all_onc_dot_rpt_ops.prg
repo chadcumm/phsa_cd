@@ -24,8 +24,10 @@ call echo(build("loading script:",curprog))
 declare nologvar = i2 with noconstant(0), protect	;do not create log = 1		, create log = 0
 declare debug_ind = i2 with noconstant(0), protect	;0 = no debug, 1=basic debug with echo, 2=msgview debug ;000
 declare rec_to_file = i2 with noconstant(0), protect
+
+execute bc_all_all_date_routines
  
-set modify maxvarlen 368435456
+set modify maxvarlen 268435456
  
 if (validate(reply->status_data) = 0)
   record reply
@@ -82,7 +84,15 @@ record 3050002REQUEST (
     2 data_type = c1
   1 blob_in = gvc
 )
- 
+
+record request2900403
+	(
+	    1 fromDate = dq8
+		1 toDate = dq8
+		1 encntr_id = f8
+	
+	) 
+	 
 declare i = i4 with noconstant(0), protect
 declare j = i4 with noconstant(0), protect
 declare pos = i4 with noconstant(0), protect
@@ -419,6 +429,7 @@ for (i = 1 to t_rec->new_doc_cnt)
 		endif
  
  		call writeLog(build2("executing report with tdbexecute"))
+ 		/*
  		set stat = initrec(3050002request)
  		free record 3050002reply
  
@@ -426,7 +437,18 @@ for (i = 1 to t_rec->new_doc_cnt)
  		set 3050002request->params = build2("^NL:^,^-|1|D^,^+|5|D^,",t_rec->new_doc_qual[i].encntr_id)
  
 		set stat = tdbexecute(5000,3202004,3050002,"REC",3050002request,"REC",3050002reply)
- 
+ 		*/
+ 		
+ 		set stat = initrec(request2900403)
+ 		free record reply2900403
+ 		
+ 		set request2900403->encntr_id = t_rec->new_doc_qual[i].encntr_id
+		set request2900403->fromDate = sCST_DATE_RANGE_TO(^-|1|D^) 
+		set request2900403->toDate = sCST_DATE_RANGE_FROM(^+|5|D^) 
+
+		call writeLog(build2(cnvtrectojson(request2900403)))
+		set stat = tdbexecute(4800,4801,2900403,"REC",request2900403,"REC",reply2900403) 
+		call writeLog(build2(cnvtrectojson(request2900403)))
 	endif
 endfor
 call writeLog(build2("* END   Calling Document Creation *****************************"))
