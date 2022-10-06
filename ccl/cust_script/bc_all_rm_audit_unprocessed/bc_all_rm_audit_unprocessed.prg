@@ -45,7 +45,7 @@ RECORD FREC(
      1 FILE_DIR = I4
      1 FILE_NAME = VC
      1 FILE_BUF = VC
-)
+) with protect
  
 record output_data (
 	1 cnt = i4
@@ -103,7 +103,7 @@ if ($SENDTOFILE = 1)
 endif
 call echo(build2("vPRSNL_ID=",vPRSNL_ID))
  
-SELECT DISTINCT into "nl,"
+SELECT DISTINCT into "nl:"
 	   location_cd = l3.location_cd ,
 	   location = trim (uar_get_code_display (l3.location_cd ) ),
 	   facility = trim (uar_get_code_description (l.location_cd ) )
@@ -195,7 +195,7 @@ SELECT DISTINCT into "nl,"
 call echo(build2("vLOCATION_PARSER=",vLOCATION_PARSER))
  
  
-execute 2req_cust_mp_req_by_loc_dt
+execute bc_all_rm_audit_unproc_drv
  
 ^NOFORMS^,
 vPRSNL_ID,
@@ -300,21 +300,23 @@ ELSE
 	with format,separator= " "
  
 	;DISPLAY CONFIRMATION
- 	SELECT INTO $OUTDEV
-    FROM DUMMYT D
-    DETAIL
-		COL 1, "Extract Complete"
-		ROW + 1
-		COL 1, "File > "
-		ROW + 1
-		COL 4, vEXTRACT_FULL
-		row + 1
-		COL 1, "Error(s) > "
-		ROW + 1
-		COL 4, vFILEERROR
-		ROW + 1
- 
-    WITH NOCOUNTER, NOHEADING, NOFORMAT
+	if ($OUTDEV = "MINE")
+	 	SELECT INTO $OUTDEV
+	    FROM DUMMYT D
+	    DETAIL
+			COL 1, "Extract Complete"
+			ROW + 1
+			COL 1, "File > "
+			ROW + 1
+			COL 4, vEXTRACT_FULL
+			row + 1
+			COL 1, "Error(s) > "
+			ROW + 1
+			COL 4, vFILEERROR
+			ROW + 1
+	 
+	    WITH NOCOUNTER, NOHEADING, NOFORMAT
+    ENDIF
 ENDIF
  
 end go
