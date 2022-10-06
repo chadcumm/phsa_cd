@@ -17,6 +17,15 @@ Rev	Date		Jira		Programmer				Comment
 
 DROP PROGRAM wh_psg_pregnancy_hist :dba GO
 CREATE PROGRAM wh_psg_pregnancy_hist :dba
+
+
+DECLARE metaDev = VC WITH CONSTANT("Chad Cummings")
+DECLARE metaBA = VC WITH CONSTANT("")
+DECLARE metaLastUpdate = VC WITH CONSTANT("2022-10-06")
+DECLARE metaComments = VC WITH CONSTANT("")
+DECLARE metaBasedOn = VC WITH CONSTANT("ENCOUNTER")
+DECLARE metaLabels = VC WITH CONSTANT("")
+
  IF (NOT (validate (rhead ,0 ) ) )
   SET rhead = "{\rtf1\ansi \deff0{\fonttbl{\f0\fswiss Arial;}}"
   SET rhead_colors1 = "{\colortbl;\red0\green0\blue0;\red255\green255\blue255;"
