@@ -27,12 +27,17 @@ Mod   Mod Date    Developer              Comment
 drop program bc_all_rm_audit_unprocessed go
 create program bc_all_rm_audit_unprocessed
  
-prompt
+prompt 
 	"Output to File/Printer/MINE" = "MINE"
 	, "Send To File" = 0
+	, "Requisition Location" = 0
+	, "All Requested Dates" = "Any Date"
+	, "Beginning Requested Date and Time" = "CURDATE"
+	, "Ending Requested Date and Time" = "CURDATE" 
+
+with OUTDEV, SENDTOFILE, location, ANY_DATE, REQ_DT_TM_BEG, REQ_DT_TM_END
  
-with OUTDEV, SENDTOFILE
- 
+execute bc_all_location_routines ^"showUnits":["AMBULATORY","NURSEUNIT"],"maxViewLevel":"NURSEUNIT"^, $location
  
 EXECUTE BC_ALL_ALL_DATE_ROUTINES
 EXECUTE BC_ALL_ALL_STD_ROUTINES
@@ -91,12 +96,16 @@ DECLARE vDELIM = VC WITH NOCONSTANT(","), PROTECT
 DECLARE vCRLF = VC WITH NOCONSTANT(CONCAT(CHAR(13),CHAR(10))), PROTECT
 DECLARE vFILEERROR = VC WITH NOCONSTANT(""), PROTECT
 DECLARE vPRINT_LINE = VC WITH PROTECT
+DECLARE nNUM = I4 WITH NOCONSTANT(0), PROTECT
  
 SET vEXTRACT_DT = FORMAT(SYSDATE, "YYYYMMDD;;Q")
 SET vFILE_NAME = CONCAT(vEXTRACT_NAME, "_", vEXTRACT_DT)
  
 declare vPRSNL_ID = f8 with noconstant(reqinfo->updt_id), protect
 declare vLOCATION_PARSER = vc with protect
+
+call echo(build2("$REQ_DT_TM_BEG=",$REQ_DT_TM_BEG))
+call echo(build2("$REQ_DT_TM_END=",$REQ_DT_TM_END))
  
 if ($SENDTOFILE = 1)
 	set vPRSNL_ID = 2
@@ -159,6 +168,7 @@ SELECT DISTINCT into "nl:"
 	    and l3.beg_effective_dt_tm < cnvtdatetime (curdate ,curtime3 )
 	    and l3.end_effective_dt_tm >= cnvtdatetime (curdate ,curtime3 )
 	    and l3.active_ind = 1
+	    and expand(nNum, 1, size(rFilteredLocations->data, 5), l3.location_cd, rFilteredLocations->data[nNum].location_cd)
 	    and l3.location_type_cd in(
 	    							 select
 								     cv.code_value
@@ -173,7 +183,7 @@ SELECT DISTINCT into "nl:"
 	    and   cv3.cdf_meaning in( "LOCATION","LOCATION_LTD")
 	    and   cv3.active_ind = 1
 	    and   cv3.display = cv2.display
-	    and   cv3.display = "BCC*"
+	   ; and   cv3.display = "BCC*"
 	order by
 	   	facility ,
 	   	location,
@@ -183,6 +193,7 @@ SELECT DISTINCT into "nl:"
  		vLOCATION_PARSER = build2(^value(^)
  		cnt = 0
  	detail
+ 		call echo(build2("location=",trim(org.org_name),":",uar_get_code_display(l3.location_cd)))
  		if (cnt > 0)
  			vLOCATION_PARSER = build2(vLOCATION_PARSER,^,^)
  		endif
@@ -190,11 +201,12 @@ SELECT DISTINCT into "nl:"
  		cnt = (cnt + 1)
  	foot report
  		vLOCATION_PARSER = build2(vLOCATION_PARSER,^)^)
- 	with nocounter
+ 	with nocounter, expand = 2
  
 call echo(build2("vLOCATION_PARSER=",vLOCATION_PARSER))
- 
- 
+;call echorecord(rFilteredLocations)
+
+
 execute bc_all_rm_audit_unproc_drv
  
 ^NOFORMS^,
@@ -202,18 +214,20 @@ vPRSNL_ID,
 441.0,
 ^01-Jan-1900^,
 ^01-Jan-1900^,
-^01-Jan-1900^,
-^01-Jan-1900^,
+value($REQ_DT_TM_BEG),
+value($REQ_DT_TM_END),
 parser(vLOCATION_PARSER),
 value(0),
 value(0),
 ^Any Date^,
-^Any Date^
- 
+value($ANY_DATE)
+
+call echorecord(output_data)
  
 IF($SENDTOFILE = 0) ;display mode
 	select into $OUTDEV
-		 mrn					= substring(1,50,output_data->qual[d1.seq].mrn)
+		 unit					= substring(1,50,output_data->qual[d1.seq].unit)
+		,mrn					= substring(1,50,output_data->qual[d1.seq].mrn)
 		,requisition_type		= substring(1,75,output_data->qual[d1.seq].requisition_type)
 		,subtype				= substring(1,75,output_data->qual[d1.seq].subtype)
 		,priority				= substring(1,50,output_data->qual[d1.seq].priority)
@@ -300,23 +314,21 @@ ELSE
 	with format,separator= " "
  
 	;DISPLAY CONFIRMATION
-	if ($OUTDEV = "MINE")
-	 	SELECT INTO $OUTDEV
-	    FROM DUMMYT D
-	    DETAIL
-			COL 1, "Extract Complete"
-			ROW + 1
-			COL 1, "File > "
-			ROW + 1
-			COL 4, vEXTRACT_FULL
-			row + 1
-			COL 1, "Error(s) > "
-			ROW + 1
-			COL 4, vFILEERROR
-			ROW + 1
-	 
-	    WITH NOCOUNTER, NOHEADING, NOFORMAT
-    ENDIF
+ 	SELECT INTO $OUTDEV
+    FROM DUMMYT D
+    DETAIL
+		COL 1, "Extract Complete"
+		ROW + 1
+		COL 1, "File > "
+		ROW + 1
+		COL 4, vEXTRACT_FULL
+		row + 1
+		COL 1, "Error(s) > "
+		ROW + 1
+		COL 4, vFILEERROR
+		ROW + 1
+ 
+    WITH NOCOUNTER, NOHEADING, NOFORMAT
 ENDIF
  
 end go
