@@ -130,8 +130,8 @@ declare fCnt = I4 WITH NOCONSTANT(0), PROTECT ;forms count
 declare fiCnt = I4 WITH NOCONSTANT(0), PROTECT ;formItems Count
 declare dose_taken_vc = vc with noconstant(" "), protect
 declare dose_rec_vc = vc with noconstant(" "), protect
-declare notes_max = f8 with constant(30.0), protect
-declare dose_taken_max = f8 with constant(30.0), protect
+declare notes_max = f8 with constant(28.0), protect
+declare dose_taken_max = f8 with constant(20.0), protect
 declare dose_rec_max = f8 with constant(26.0), protect
 declare rec_by_max = f8 with constant(30.0), protect
 
